@@ -602,11 +602,14 @@ except FileNotFoundError:
 addAppsButtons(apps)
 
 #Add New App function
-def getFilePath(entry):
+def getFilePath(entry,rel):
     absolute_path = askopenfilename()
-    try:
-        relative_path = os.path.relpath(absolute_path, start=currentDir)
-    except:
+    if rel == True:
+        try:
+            relative_path = os.path.relpath(absolute_path, start=currentDir)
+        except:
+            relative_path=absolute_path
+    else:
         relative_path=absolute_path
 
     if absolute_path != "":
@@ -657,8 +660,8 @@ def addAppEvent():
     labelAppPath.grid(row=3,column=0,sticky="w")
     eAppPath.grid(row=3,column=1)
     
-    buttonAppPathBrowseIcon=tk.CTkButton(addAppWindow, text="...",command=lambda entry=eAppPath : getFilePath(entry),width=10)
-    buttonAppPathBrowseIcon.grid(row=3,column=2)
+    buttonAppPathBrowse=tk.CTkButton(addAppWindow, text="...",command=lambda entry=eAppPath : getFilePath(entry,False),width=10)
+    buttonAppPathBrowse.grid(row=3,column=2)
     
     #Get App Icon
     labelAppIcon = tk.CTkLabel(addAppWindow,text="Icon ",font=("Arial",12),padx=20,pady=20,)
@@ -667,8 +670,8 @@ def addAppEvent():
     labelAppIcon.grid(row=4,column=0,sticky="w")
     eAppIcon.grid(row=4,column=1)
     
-    buttonAppIconBrowseIcon=tk.CTkButton(addAppWindow, text="...",command=lambda entry=eAppIcon : getFilePath(entry),width=10)
-    buttonAppIconBrowseIcon.grid(row=4,column=2)
+    buttonAppIconBrowse=tk.CTkButton(addAppWindow, text="...",command=lambda entry=eAppIcon : getFilePath(entry,True),width=10)
+    buttonAppIconBrowse.grid(row=4,column=2)
     
     #Close Add App Window function
     def addApp():

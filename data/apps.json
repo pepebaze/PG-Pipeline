@@ -16,5 +16,11 @@
         "path": "C:/Program Files/Blender Foundation/Blender 2.93/blender.exe",
         "version": "2.93",
         "icon": "data\\icons\\blender.png"
+    },
+    "app4": {
+        "name": "DaVinci Resolve",
+        "path": "C:/Program Files/Blackmagic Design/DaVinci Resolve/Resolve.exe",
+        "version": "17",
+        "icon": "data\\icons\\davinci.png"
     }
 }
