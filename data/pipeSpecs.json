@@ -1,0 +1,23 @@
+{
+    "projectFolders": ["input","assets","shots","render","edit","delivery","library"],
+    "assetTypes": ["char","env","prop","vfx"],
+    "shotSteps": ["lay","anm","vfx","cfx","set","lgt","cmp"],
+    "assetSteps": ["mod","rig","lookdev","cfx"],
+
+    "initFiles": {
+        "houdini": "data/initFiles/houdini_init.hiplc",
+        "nuke": "data/initFiles/nuke_init.nk",
+        "image": "data/initFiles/image_init.png",
+        "pureref": "data/initFiles/pureref_init.pur",
+        "video": "data/initFiles/video_init.mp4",
+        "davinci": "data/initFiles/video_init.drp"
+    },
+
+    "houdiniVars": {
+        "OTLS":  "tools/houdini/otls",
+        "ICONS": "$OTLS/icons",
+        "HOUDINI_OTLSCAN_PATH": "$OTLS/test;$OTLS/info;$OTLS/publish;$OTLS/load;$OTLS/build;$OTLS/lookdev;&;",
+        "MISC": "data/misc"
+    }
+}
+

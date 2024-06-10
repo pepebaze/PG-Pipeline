@@ -1,0 +1,20 @@
+{
+    "app1": {
+        "name": "Houdini",
+        "path": "C:/Program Files/Side Effects Software/Houdini 20.0.547/bin/houdini.exe",
+        "version": "20.0.547",
+        "icon": "data\\icons\\houdini.png"
+    },
+    "app2": {
+        "name": "Nuke",
+        "path": "C:/Program Files/Nuke15.0v4/Nuke15.0.exe",
+        "version": "15.0v4",
+        "icon": "data\\icons\\nuke.png"
+    },
+    "app3": {
+        "name": "Blender",
+        "path": "C:/Program Files/Blender Foundation/Blender 2.93/blender.exe",
+        "version": "2.93",
+        "icon": "data\\icons\\blender.png"
+    }
+}
