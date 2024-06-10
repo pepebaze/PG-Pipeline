@@ -43,7 +43,11 @@ davinciSrc = init_files.get('davinci')
 #Get projects folder path
 envVars = dotenv_values('data/.env')
 projectsPath=envVars.get("PROJECTS")
-projectsList=os.listdir(projectsPath)
+
+try:
+    projectsList=os.listdir(projectsPath)
+except:
+    projectsList=[" "]
 
 if len(projectsList)==0:
     projectsList=[" "]
@@ -654,7 +658,7 @@ def addAppEvent():
     eAppVersion.grid(row=2,column=1)
     
     #Get App Path
-    labelAppPath = tk.CTkLabel(addAppWindow,text="Path ",font=("Arial",12),padx=20,pady=20,)
+    labelAppPath = tk.CTkLabel(addAppWindow,text="Exe ",font=("Arial",12),padx=20,pady=20,)
     eAppPath = tk.CTkEntry(addAppWindow,width=200,font=("Arial",12))
     eAppPath.insert(0,"")
     labelAppPath.grid(row=3,column=0,sticky="w")
