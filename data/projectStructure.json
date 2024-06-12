@@ -255,6 +255,10 @@
 
     "assetTypes": ["char","env","prop","vfx"],
 
+    "assetSteps": ["mod","rig","lookdev","cfx"],
+
+    "shotSteps": ["lay","anm","vfx","cfx","set","lgt","cmp"],
+
     "initFiles": {
         "houdini": "data/initFiles/houdini_init.hiplc",
         "nuke": "data/initFiles/nuke_init.nk",
