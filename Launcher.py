@@ -44,7 +44,7 @@ except:
     projectsList=[" "]
 
 if len(projectsList)==0:
-    projectsList=[" "]
+    projectsList=[""]
     
 currentDir = os.getcwd()
 print("PG Pipeline 1.0, built 2024.")
@@ -95,12 +95,16 @@ def messageWindow(root, title, text, type):
     label = tk.CTkLabel(frame,text=text,padx=10,)
     label.grid(row=0,column=1)
     
+
     
 root = tk.CTk()
 root.title("PG Pipeline")
 root.iconbitmap("data/icons/appIcon.ico")
 root.resizable(False,True)
 center_window(root,720,375)
+
+if os.path.exists(projectsPath)==False:
+    messageWindow(root, "Launch Failed", f"Warning: Projects dir {projectsPath} doesn't exists.", "warning")
 
 
 ##Create tab view
@@ -199,8 +203,16 @@ def createRestDirs(projectName, basePath, projectStructure, initFiles, parent):
 #Create project
 def createProject():
     
+    if os.path.exists(projectsPath)==False:
+        messageWindow(root, "Error", f"Error: Projects dir {projectsPath} doesn't exists.", "error")
+        return
+    
     projectName=eProjectName.get()
     projectPath=projectsPath+"/"+projectName
+    
+    if projectName in projectsList:
+        messageWindow(root, "Error", f"Error: Project {projectName} already exists.", "error")
+        return
     
     print("\n******************************")
     print("\nPROJECT BUILDER\n")
@@ -208,7 +220,7 @@ def createProject():
     if projectName!="" and len(projectName)>= 3 and any(char.isdigit() for char in projectName) == False:
         
         if createProjectDirs(projectPath,projectStructure) == False:        
-            message = "Error: Failed to create "+projectName+" project.\nProject already exist."
+            message = "Error: Failed to create "+projectName+" project.\n"
             print(message+"\n")
             messageWindow(root,"Project Creation Failed",message,"error")
         else:
@@ -348,8 +360,18 @@ def createShotsDirs(projectName, basePath, ep, seq, sh, shBegin, shEnd, shotsStr
 
 #Create shots
 def createShot():
+    
+    if os.path.exists(projectsPath)==False:
+        messageWindow(root, "Error", f"Error: Projects dir {projectsPath} doesn't exists.", "error")
+        return
+    
     print("\n******************************")
     print("\nSHOT BUILDER\n")
+    currentProject=optionmenu_Projects1.get()
+    if currentProject=="":
+        messageWindow(root, "Error", f"Error: Select a valid Project or create a new one first.", "error")
+        return
+    
     if eEpisode.get().isdigit() and eSequence.get().isdigit() and eShotBegin.get().isdigit() and eShotEnd.get().isdigit() and int(eShotBegin.get())<=int(eShotEnd.get()):
         currentProject=optionmenu_Projects1.get()
         shotsPath=projectsPath+"/"+currentProject+"/shots"
@@ -448,8 +470,18 @@ def createAssetDirs(projectName, basePath, assetType, assetName, assetStructure,
             
 #Create asset
 def createAsset():
+    
+    if os.path.exists(projectsPath)==False:
+        messageWindow(root, "Error", f"Error: Projects dir {projectsPath} doesn't exists.", "error")
+        return
+    
     print("\n******************************")
     print("\nASSET BUILDER\n")
+    
+    currentProject=optionmenu_Projects2.get()
+    if currentProject=="":
+        messageWindow(root, "Error", f"Error: Select a valid Project or create a new one first.", "error")
+        return
     
     assetName=eAssetName.get()
     
@@ -457,7 +489,7 @@ def createAsset():
         
         assetType=optionmenu_assetTypes.get()    
         
-        currentProject=optionmenu_Projects2.get()
+        
         assetsPath=projectsPath+"/"+currentProject+"/assets"
         assetPath=assetsPath+"/"+assetType+"/"+assetName
         
@@ -522,12 +554,20 @@ def addEnvVars():
         os.environ[var] = expanded_var
         print(expanded_var)
     
-    
 
 #Execute apps function
 def executeApp(app):
+    
+    if os.path.exists(projectsPath)==False:
+        messageWindow(root, "Error", f"Error: Projects dir {projectsPath} doesn't exists.", "error")
+        return
+    currentProject=optionmenu_Projects3.get()
+    if currentProject=="":
+        messageWindow(root, "Error", f"Error: Select a valid Project or create a new one first.", "error")
+        return
+    
     print(f"Launching {app["name"]} ")
-    # Set the environment variable
+    # Set the environment variables
     addEnvVars()
 
     # Path to the .exe file
