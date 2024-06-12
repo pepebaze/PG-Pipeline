@@ -79,6 +79,11 @@
                             "video": "file",
                             "image": "file"
                         }
+                    },
+                    "build": {
+                        "job": {
+                            "v000": {}
+                        }
                     }
                 }
             }
@@ -89,7 +94,7 @@
         "shots": {
             "epXXX": {
                 "seqXXX": {
-                    "shXXX": {
+                    "shXXXX": {
                         "lay": {
                             "job": {
                                 "cache": {},

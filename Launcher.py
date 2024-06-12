@@ -2,6 +2,7 @@ import os
 import json
 import math
 import shutil
+import getpass
 import subprocess
 from pathlib import Path
 import customtkinter as tk
@@ -96,7 +97,8 @@ def messageWindow(root, title, text, type):
     label.grid(row=0,column=1)
     
 
-    
+tk.set_appearance_mode("dark")
+tk.set_default_color_theme("dark-blue") 
 root = tk.CTk()
 root.title("PG Pipeline")
 root.iconbitmap("data/icons/appIcon.ico")
@@ -286,32 +288,28 @@ labelShot.grid(row=3,column=0,sticky="w")
 eShotBegin.grid(row=3,column=1,sticky="w")
 eShotEnd.grid(row=3,column=2,sticky="w")
 
+#Steps
+labelShotStep = tk.CTkLabel(frameShots,text="Step ",font=("Arial",12),padx=20,pady=20,)
+optionmenu_Steps = tk.CTkOptionMenu(frameShots,dynamic_resizing=False,values=["1","5","10","25","50","100"])
+labelShotStep.grid(row=4,column=0,sticky="w")
+optionmenu_Steps.grid(row=4,column=1,sticky="w")
+
 #Button Create Shot
 buttonCreateShot=tk.CTkButton(frameShots, text="Create",command=lambda : createShot())
-buttonCreateShot.grid(row=4,column=2,sticky="e")
+buttonCreateShot.grid(row=5,column=2,sticky="e")
 
 ##END GUI##
 
 ##FUNCTIONS##
-#Num to str function -> Converts 23 to 023, 7 to 007, etc.
-def numToStr(num):
-    numStr=""
-    if num < 10:
-        numStr="00"+str(num)
-    elif num < 100:
-        numStr="0"+str(num)
-    elif num < 1000:
-        numStr=""+str(num)
-    return numStr
 
 #Create shots dirs
 def createShotsDirs(projectName, basePath, ep, seq, sh, shBegin, shEnd, shotsStructure, initFiles, parent):
     
     for name, sub_structure in shotsStructure.items():
-        if name!="shXXX":
-            epStr=numToStr(ep)
-            seqStr=numToStr(seq)
-            shStr=numToStr(sh)
+        if name!="shXXXX":
+            epStr=f"{ep:03}"
+            seqStr=f"{seq:03}"
+            shStr=f"{sh:04}"
             
             newName = name.replace("epXXX",f"ep{epStr}").replace("seqXXX",f"seq{seqStr}")
             newPath = os.path.join(basePath, newName)
@@ -323,7 +321,7 @@ def createShotsDirs(projectName, basePath, ep, seq, sh, shBegin, shEnd, shotsStr
                 index = newPathSplit.index("shots")
                 
                 #Get original init file
-                origPath = "C:/Users/pepeb/Desktop/PG-Pipeline/"+initFiles[name]
+                origPath = initFiles[name]
                 extension = os.path.splitext(origPath)[1]
                 
                 #Copy file with proper name
@@ -331,13 +329,14 @@ def createShotsDirs(projectName, basePath, ep, seq, sh, shBegin, shEnd, shotsStr
                     newPath = f"{basePath}/{projectName}_ep{epStr}_seq{seqStr}_sh{shStr}_{newPathSplit[index+4]}_master_v000{extension}"
                 else:
                     newPath = f"{basePath}/{projectName}_ep{epStr}_seq{seqStr}_sh{shStr}_{newPathSplit[index+4]}_master_preview_v000{extension}"
-                    
+                print(newPath)
+                print(origPath)
                 if os.path.exists(newPath) == False:
                     try:
                         shutil.copy2(origPath, newPath)
                         print("Create file "+newPath)
-                    except:
-                        pass
+                    except OSError as error:
+                        print(error)
             else:
                 if os.path.exists(newPath) == False:
                     try:
@@ -348,13 +347,14 @@ def createShotsDirs(projectName, basePath, ep, seq, sh, shBegin, shEnd, shotsStr
                 createShotsDirs(projectName,newPath, ep, seq, sh, shBegin, shEnd, sub_structure, initFiles, name)
         else:
             sh=shBegin
+            step=int(optionmenu_Steps.get())
             while sh<=shEnd:
-                shStr=numToStr(sh)
-                newName = name.replace("shXXX",f"sh{shStr}")
+                shStr=shStr=f"{sh:04}"
+                newName = name.replace("shXXXX",f"sh{shStr}")
                 newPath = os.path.join(basePath, newName)
                 newPath = os.path.normpath(newPath).replace("\\", "/")
                 createShotsDirs(projectName,newPath, ep, seq, sh, shBegin, shEnd, sub_structure, initFiles, name)
-                sh+=1
+                sh+=step
             return
 
 
@@ -536,11 +536,23 @@ appsFrame = tk.CTkFrame(scrollFrame)
 appsFrame.pack()
 
 #Apply environment variables in ".env" file
-def addEnvVars():
+def addEnvVars(app):
+    path = app["path"]
+    if "houdini" in path or "Houdini" in path:
+        splitPath = path.split("/")
+        name = splitPath[len(splitPath)-3]
+        version = name.split(" ")[1]
+        
+        splitVersion = version.split(".")
+        username = getpass.getuser()
+        houdini_user_pref_dir = f"C:/Users/{username}/Documents/houdini{splitVersion[0]}.{splitVersion[1]}"
+        os.environ['HOUDINI_USER_PREF_DIR']=houdini_user_pref_dir
+        
     currentProject=optionmenu_Projects3.get()
     
     #Set current project env variables
     os.environ['PROJECT'] = projectsPath+"/"+currentProject
+    os.environ['JOB'] = projectsPath+"/"+currentProject
     
     #Set env variables from .env file
     for var, value in envVars.items():
@@ -552,7 +564,9 @@ def addEnvVars():
             
         expanded_var = os.path.normpath(expanded_var).replace("\\", "/")
         os.environ[var] = expanded_var
-        print(expanded_var)
+        
+    
+    
     
 
 #Execute apps function
@@ -567,8 +581,8 @@ def executeApp(app):
         return
     
     print(f"Launching {app["name"]} ")
-    # Set the environment variables
-    addEnvVars()
+    # Set environment variables
+    addEnvVars(app)
 
     # Path to the .exe file
     exe_path = app["path"]
@@ -621,6 +635,7 @@ addAppsButtons(apps)
 #Add New App function
 def getFilePath(entry,rel):
     absolute_path = askopenfilename()
+    absolute_path = os.path.normpath(absolute_path).replace("\\", "/")
     if rel == True:
         try:
             relative_path = os.path.relpath(absolute_path, start=currentDir)
