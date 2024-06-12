@@ -9,35 +9,29 @@ from PIL import Image, ImageTk
 from dotenv import dotenv_values
 from tkinter.filedialog import askopenfilename
 
-
-
-
 #### INIT ####
 ###############################################
 
-## Get pipeSpecs
-pipeSpecsJson = "data/pipeSpecs.json"
-# Try to read the existing JSON file
-try:
-    with open(pipeSpecsJson, 'r') as file:
-        data = json.load(file)
+## Read Project Structure form json file
+projectStructureJson = "data/projectStructure.json"
+try:    
+    with open(projectStructureJson, 'r') as f:
+        structure = json.load(f)
 except FileNotFoundError:
-        data=[]
+        structure={}
+projectStructure = structure["project"]
+assetStructure = projectStructure["assets"]
+shotsStructure = projectStructure["shots"]
 
-projectFolders = data['projectFolders']
-assetTypes = data['assetTypes']
-shotSteps = data['shotSteps']
-assetSteps = data['assetSteps']
+initFiles = structure["initFiles"]
+hipSrc = initFiles.get('houdini')
+purerefSrc = initFiles.get('pureref')
+videoSrc = initFiles.get('video')
+imageSrc = initFiles.get('image')
+nukeSrc = initFiles.get('nuke')
+davinciSrc = initFiles.get('davinci')
 
-init_files = data['initFiles']
-
-
-hipSrc = init_files.get('houdini')
-purerefSrc = init_files.get('pureref')
-videoSrc = init_files.get('video')
-imageSrc = init_files.get('image')
-nukeSrc = init_files.get('nuke')
-davinciSrc = init_files.get('davinci')
+assetTypes=structure["assetTypes"]
 
 ##Get projects
 #Get projects folder path
@@ -63,7 +57,9 @@ print(f"Directory: {currentDir}\n")
 
 
 
-#### START GUI ####
+#### START GUI INIT ####
+###############################################
+
 ##Define root
 def center_window(root, width=300, height=200):
     # get screen width and height
@@ -115,11 +111,16 @@ tabview.add("Projects")
 tabview.add("Shots")
 tabview.add("Assets")
 
+###############################################
+#### END GUI INIT ####
+
 
 
     
 #### PROJECTS TAB ####
 ###############################################
+
+##GUI##
 frameProjects=tk.CTkFrame(master=tabview.tab('Projects'))
 frameProjects.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
@@ -134,49 +135,103 @@ eProjectName.insert(0,"projectName")
 labelProjectName.grid(row=1,column=0,sticky="w")
 eProjectName.grid(row=1,column=1)
 
-#Create project function
+#Button Create Project
+buttonCreateProject=tk.CTkButton(frameProjects, text="Create New",command=lambda : createProject())
+buttonCreateProject.grid(row=2,column=1,sticky="e")
+##END GUI##
+
+##FUNCTIONS##
+## Create project dirs
+def createProjectDirs(projectPath,projectStructure):
+    try:
+        os.mkdir(projectPath)
+    except OSError as error:
+        return False
+        
+    for folder in projectStructure.keys():
+        folderPath=projectPath+"/"+folder
+        try:
+            os.mkdir(folderPath)
+        except OSError as error:
+            return False
+        print(f"Create dir {folderPath}")
+    return True
+
+#Create rest project dirs
+def createRestDirs(projectName, basePath, projectStructure, initFiles, parent):
+    for name, sub_structure in projectStructure.items():
+        
+        if name!="shots" and name!="assets":
+            newPath = os.path.join(basePath, name)
+            newPath = os.path.normpath(newPath).replace("\\", "/")
+            
+            if sub_structure == 'file':  # Check if it's a file
+                #Asset step index
+                newPathSplit = newPath.split("/")
+                index = newPathSplit.index(projectName)
+                
+                #Get original init file
+                origPath = "C:/Users/pepeb/Desktop/PG-Pipeline/"+initFiles[name]
+                extension = os.path.splitext(origPath)[1]
+                
+                #Copy file with proper name
+                if parent != "preview":
+                    newPath = f"{basePath}/{projectName}_{newPathSplit[index+1]}_master_v000{extension}"
+                else:
+                    newPath = f"{basePath}/{projectName}_{newPathSplit[index+1]}_master_preview_v000{extension}"
+                    
+                if os.path.exists(newPath) == False:
+                    try:
+                        shutil.copy2(origPath, newPath)
+                        print("Create file "+newPath)
+                    except:
+                        pass
+                
+            else:
+                try:
+                    os.mkdir(newPath)
+                    print("Create dir "+newPath)
+                except:
+                    pass
+                createRestDirs(projectName, newPath, sub_structure, initFiles, name)
+    
+
+#Create project
 def createProject():
     
     projectName=eProjectName.get()
+    projectPath=projectsPath+"/"+projectName
+    
     print("\n******************************")
     print("\nPROJECT BUILDER\n")
+    
     if projectName!="" and len(projectName)>= 3 and any(char.isdigit() for char in projectName) == False:
-        eProjectName.delete(0, tk.END)
-        eProjectName.insert(0,"")
-        projectPath=projectsPath+"/"+projectName
-        print("\n******************************")
-        print("\nPROJECT BUILDER\n")
-        try:
-            os.mkdir(projectPath)
-        except OSError as error:
-            message = "Error: "+projectName+" project already exists."
+        
+        if createProjectDirs(projectPath,projectStructure) == False:        
+            message = "Error: Failed to create "+projectName+" project.\nProject already exist."
             print(message+"\n")
             messageWindow(root,"Project Creation Failed",message,"error")
         else:
-            
+            createRestDirs(projectName, projectPath, projectStructure, initFiles, projectName)
             projectsList.append(projectName)
             optionmenu_Projects1.configure(values=projectsList)
             optionmenu_Projects2.configure(values=projectsList)
             optionmenu_Projects3.configure(values=projectsList)
-            
-            #Create project folders
-            for f in projectFolders:
-                folderPath=projectPath+"/"+f
-                os.mkdir(folderPath)
-                print("    -"+f+ " folder created at: "+folderPath)
                 
-            message = f"Project {projectName} created succesfully."
+            message = f"Project {projectName} has been successfully created."
             print(message+"\n")
-            messageWindow(root,"Shots Created",message,"info")
+            messageWindow(root,"Project Created",message,"info")
+            
+            eProjectName.delete(0, tk.END)
+            eProjectName.insert(0,"")
         
     else:
         message = "Error: The project name "+projectName+" is not a valid name.\nIt must have 3 or more letters and not contain digits."
         print(message+"\n")
         messageWindow(root,"Project Creation Failed",message,"error")
-    print("******************************\n")       
-#Button Create Project
-buttonCreateProject=tk.CTkButton(frameProjects, text="Create New",command=createProject)
-buttonCreateProject.grid(row=2,column=1,sticky="e")
+    print("******************************\n")     
+##END FUNCTIONS##
+
 
 ###############################################
 #### END PROJECTS TAB ####
@@ -187,6 +242,7 @@ buttonCreateProject.grid(row=2,column=1,sticky="e")
 #### SHOTS TAB ####
 ###############################################
 
+##GUI##
 frameShots=tk.CTkFrame(master=tabview.tab('Shots'))
 frameShots.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 labelProject = tk.CTkLabel(frameShots,text="Project ",font=("Arial",12),padx=20,pady=20,)
@@ -218,6 +274,13 @@ labelShot.grid(row=3,column=0,sticky="w")
 eShotBegin.grid(row=3,column=1,sticky="w")
 eShotEnd.grid(row=3,column=2,sticky="w")
 
+#Button Create Shot
+buttonCreateShot=tk.CTkButton(frameShots, text="Create",command=lambda : createShot())
+buttonCreateShot.grid(row=4,column=2,sticky="e")
+
+##END GUI##
+
+##FUNCTIONS##
 #Num to str function -> Converts 23 to 023, 7 to 007, etc.
 def numToStr(num):
     numStr=""
@@ -228,14 +291,66 @@ def numToStr(num):
     elif num < 1000:
         numStr=""+str(num)
     return numStr
+
+#Create shots dirs
+def createShotsDirs(projectName, basePath, ep, seq, sh, shBegin, shEnd, shotsStructure, initFiles, parent):
     
-#Create shot function
+    for name, sub_structure in shotsStructure.items():
+        if name!="shXXX":
+            epStr=numToStr(ep)
+            seqStr=numToStr(seq)
+            shStr=numToStr(sh)
+            
+            newName = name.replace("epXXX",f"ep{epStr}").replace("seqXXX",f"seq{seqStr}")
+            newPath = os.path.join(basePath, newName)
+            newPath = os.path.normpath(newPath).replace("\\", "/")
+            
+            if sub_structure == 'file':  # Check if it's a file
+                #Asset step index
+                newPathSplit = newPath.split("/")
+                index = newPathSplit.index("shots")
+                
+                #Get original init file
+                origPath = "C:/Users/pepeb/Desktop/PG-Pipeline/"+initFiles[name]
+                extension = os.path.splitext(origPath)[1]
+                
+                #Copy file with proper name
+                if parent != "preview":
+                    newPath = f"{basePath}/{projectName}_ep{epStr}_seq{seqStr}_sh{shStr}_{newPathSplit[index+4]}_master_v000{extension}"
+                else:
+                    newPath = f"{basePath}/{projectName}_ep{epStr}_seq{seqStr}_sh{shStr}_{newPathSplit[index+4]}_master_preview_v000{extension}"
+                    
+                if os.path.exists(newPath) == False:
+                    try:
+                        shutil.copy2(origPath, newPath)
+                        print("Create file "+newPath)
+                    except:
+                        pass
+            else:
+                if os.path.exists(newPath) == False:
+                    try:
+                        os.makedirs(newPath, exist_ok=True)
+                        print("Create dir "+newPath)
+                    except:
+                        pass
+                createShotsDirs(projectName,newPath, ep, seq, sh, shBegin, shEnd, sub_structure, initFiles, name)
+        else:
+            sh=shBegin
+            while sh<=shEnd:
+                shStr=numToStr(sh)
+                newName = name.replace("shXXX",f"sh{shStr}")
+                newPath = os.path.join(basePath, newName)
+                newPath = os.path.normpath(newPath).replace("\\", "/")
+                createShotsDirs(projectName,newPath, ep, seq, sh, shBegin, shEnd, sub_structure, initFiles, name)
+                sh+=1
+            return
+
+
+#Create shots
 def createShot():
     print("\n******************************")
     print("\nSHOT BUILDER\n")
-    
-    if eEpisode.get().isdigit() and eSequence.get().isdigit() and eShotBegin.get().isdigit() and eShotEnd.get().isdigit():
-    
+    if eEpisode.get().isdigit() and eSequence.get().isdigit() and eShotBegin.get().isdigit() and eShotEnd.get().isdigit() and int(eShotBegin.get())<=int(eShotEnd.get()):
         currentProject=optionmenu_Projects1.get()
         shotsPath=projectsPath+"/"+currentProject+"/shots"
         
@@ -244,141 +359,17 @@ def createShot():
         shBegin=int(eShotBegin.get())
         shEnd=int(eShotEnd.get())
         
+        createShotsDirs(currentProject, shotsPath, ep, seq, 0, shBegin, shEnd, shotsStructure, initFiles, "shots")
         
-        epStr=numToStr(ep)
-        seqStr=numToStr(seq)
-        
-        epPath=shotsPath+"/ep"+epStr
-        seqPath=epPath+"/seq"+seqStr
-        
-        try:
-            os.mkdir(epPath)
-        except:
-            pass
-        else:
-            editPath=projectsPath+"/"+currentProject+"/edit"
-            editEpPath=editPath+"/ep"+epStr
-            try:
-                os.mkdir(editEpPath)
-            except:
-                pass
-            
-            editEpJobPath=editEpPath+"/job"
-            try:
-                os.mkdir(editEpJobPath)
-            except:
-                pass
-            
-            nukePath=editEpJobPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_edit_v000.nk"
-            print("            Create nuke file at: ",nukePath)
-            shutil.copyfile(nukeSrc, nukePath)
-            
-            editEpPubPath=editEpPath+"/pub"
-            try:
-                os.mkdir(editEpPubPath)
-            except:
-                pass
-            
-            videoPath=editEpPubPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_edit_v000.mp4"
-            print("            Create video file at: ",videoPath)
-            shutil.copyfile(videoSrc, videoPath)
-            
-            editEpPubPath=editEpPath+"/pub"
-            print("Create Episode at: ",epPath)
-            
-        try:
-            os.mkdir(seqPath)
-        except:
-            pass
-        else:
-            print("Create Sequence at: ",seqPath)
-            
-        sh=shBegin
-        while sh<=shEnd:
-            shStr=numToStr(int(sh))
-            shPath=seqPath+"/sh"+shStr
-            try:
-                os.mkdir(shPath)
-            except:
-                pass
-            else:
-                print("Create Shot at: ",shPath)
-                for s in shotSteps:
-                    stepPath=shPath+"/"+s
-                    os.mkdir(stepPath)
-                    print("    Create "+s+" folder at: ",stepPath)
-                    
-                    #Create job folder
-                    jobPath=stepPath+"/job"
-                    os.mkdir(jobPath)
-                    print("        Create job folder at: ",jobPath)
-                    
-                    if s != "cmp":
-                        hipPath=jobPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_v000.hip"
-                        print("            Create hip file at: ",hipPath)
-                        shutil.copyfile(hipSrc, hipPath)
-                    
-                        purerefPath=jobPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_v000.pur"
-                        print("            Create purRef file at: ",purerefPath)
-                        shutil.copyfile(purerefSrc, purerefPath)
-                    
-                        workCachePath=jobPath+"/cache"
-                        os.mkdir(workCachePath)
-                        print("            Create work cache folder at: ",workCachePath)
-                    
-                        workFlipbookPath=jobPath+"/flipbook"
-                        os.mkdir(workFlipbookPath)
-                        print("            Create flipbook folder at: ",workFlipbookPath)
-                        
-                        videoPath=workFlipbookPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_flipbook_v000.mp4"
-                        print("            Create video file at: ",videoPath)
-                        shutil.copyfile(videoSrc, videoPath)
-                    else:
-                        nukePath=jobPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_v000.nk"
-                        print("            Create nuke file at: ",nukePath)
-                        shutil.copyfile(nukeSrc, nukePath)
-                    
-                    #Create pub folder
-                    pubPath=stepPath+"/pub"
-                    os.mkdir(pubPath)
-                    print("        Create pub folder at: ",pubPath)
-                    
-                    if s != "cmp":
-                        pubUSDPath=pubPath+"/usd"
-                        os.mkdir(pubUSDPath)
-                        print("            Create pub usd folder at: ",pubUSDPath)
-                    else:
-                        videoPath=pubPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_v000.mp4"
-                        print("            Create video file at: ",videoPath)
-                        shutil.copyfile(videoSrc, videoPath)
-                    
-                    #Create preview folder
-                    previewPath=stepPath+"/preview"
-                    os.mkdir(previewPath)
-                    print("        Create preview folder at: ",previewPath)
-                    
-                    videoPath=previewPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_preview_v000.mp4"
-                    print("            Create video file at: ",videoPath)
-                    shutil.copyfile(videoSrc, videoPath)
-                    
-                    imagePath=previewPath+"/"+currentProject+"_ep"+epStr+"_seq"+seqStr+"_sh"+shStr+"_"+s+"_master_preview_v000.png"
-                    print("            Create image file at: ",imagePath)
-                    shutil.copyfile(imageSrc, imagePath)
-                    
-                        
-            sh+=1
-        message = f"Shots created succesfully."
+        message = f"Shots have been successfully created."
         print(message+"\n")
         messageWindow(root,"Shots Created",message,"info")
     else:
-        message = "Error: Please introduce positive integers only."
+        message = "Error: Please introduce positive integers only.\nShot Begin should be less or equal than Shot End."
         print(message+"\n")
         messageWindow(root,"Project Creation Failed",message,"error")
     print("******************************\n")
-
-#Button Create Shot
-buttonCreateShot=tk.CTkButton(frameShots, text="Create",command=createShot)
-buttonCreateShot.grid(row=4,column=2,sticky="e")
+##END FUNCTIONS##
 
 ###############################################
 #### END SHOTS TAB ####
@@ -389,6 +380,7 @@ buttonCreateShot.grid(row=4,column=2,sticky="e")
 #### ASSETS TAB ####
 ###############################################
 
+##START GUI##
 frameAssets=tk.CTkFrame(master=tabview.tab('Assets'))
 frameAssets.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
@@ -409,7 +401,52 @@ eAssetName.insert(0,"assetName")
 labelAssetName.grid(row=2,column=0,sticky="w")
 eAssetName.grid(row=2,column=1,sticky="w")
 
-#Create asset function
+#Button Create Asset
+buttonCreateAsset=tk.CTkButton(frameAssets, text="Create",command=lambda : createAsset())
+buttonCreateAsset.grid(row=3,column=1,sticky="e")
+
+##END GUI##
+
+##FUNCTIONS##
+##Create asset dirs
+def createAssetDirs(projectName, basePath, assetType, assetName, assetStructure, initFiles, parent):
+    
+    for name, sub_structure in assetStructure.items():
+        newName = name.replace("assetName",assetName).replace("assetType",assetType)
+        newPath = os.path.join(basePath, newName)
+        newPath = os.path.normpath(newPath).replace("\\", "/")
+        
+        if sub_structure == 'file':  # Check if it's a file
+            #Asset step index
+            newPathSplit = newPath.split("/")
+            index = newPathSplit.index(assetName)
+            
+            #Get original init file
+            origPath = "C:/Users/pepeb/Desktop/PG-Pipeline/"+initFiles[name]
+            extension = os.path.splitext(origPath)[1]
+            
+            #Copy file with proper name
+            if parent != "preview":
+                newPath = f"{basePath}/{projectName}_{assetType}_{assetName}_{newPathSplit[index+1]}_master_v000{extension}"
+            else:
+                newPath = f"{basePath}/{projectName}_{assetType}_{assetName}_{newPathSplit[index+1]}_master_preview_v000{extension}"
+            
+            if os.path.exists(newPath) == False:
+                try:
+                    shutil.copy2(origPath, newPath)
+                    print("Create file "+newPath)
+                except:
+                    pass
+        else:
+            if os.path.exists(newPath) == False:
+                try:
+                    os.makedirs(newPath, exist_ok=True)
+                    print("Create dir "+newPath)
+                except:
+                    pass
+            createAssetDirs(projectName,newPath, assetType, assetName, sub_structure, initFiles, name)
+            
+#Create asset
 def createAsset():
     print("\n******************************")
     print("\nASSET BUILDER\n")
@@ -417,97 +454,32 @@ def createAsset():
     assetName=eAssetName.get()
     
     if len(assetName) >= 2 and any(char.isdigit() for char in assetName) == False:
-    
+        
         assetType=optionmenu_assetTypes.get()    
-        eAssetName.delete(0, tk.END)
-        eAssetName.insert(0,"")
+        
         currentProject=optionmenu_Projects2.get()
         assetsPath=projectsPath+"/"+currentProject+"/assets"
+        assetPath=assetsPath+"/"+assetType+"/"+assetName
         
-        assetTypeFolderPath=assetsPath+"/"+assetType
-        try:
-            os.mkdir(assetTypeFolderPath)
-        except:
-            pass
+        if os.path.exists(assetPath) == False:
+            createAssetDirs(currentProject, assetsPath, assetType, assetName, assetStructure, initFiles, "assets")
+            eAssetName.delete(0, tk.END)
+            eAssetName.insert(0,"")
+            message = "Asset "+assetName+" has been successfully created."
+            print(message+"\n")
+            messageWindow(root,"Asset Created",message,"info")
         else:
-            print("Create "+assetType+" folder at : "+assetTypeFolderPath)
-        
-        assetPath=assetTypeFolderPath+"/"+assetName
-        try:
-            os.mkdir(assetPath)
-        except:
             message = "Error: "+assetName+" asset already exists."
             print(message+"\n")
             messageWindow(root,"Asset Creation Failed",message,"error")
-        else:
-            print("Create asset "+assetName+" folder at: "+assetPath)
-            
-            for s in assetSteps:
-                
-                stepPath=assetPath+"/"+s
-                print("    Create "+s+"+ folder at: "+stepPath)
-                os.mkdir(stepPath)
-                
-                if s == "lookdev":
-                    texturesPath=stepPath+"/textures"
-                    os.mkdir(texturesPath)
-                    print("    Create textures folder at: ",texturesPath)
-                
-                #Create job folder
-                jobPath=stepPath+"/job"
-                os.mkdir(jobPath)
-                print("        Create job folder at: ",jobPath)
-                
-                jobCachePath=jobPath+"/cache"
-                os.mkdir(jobCachePath)
-                print("            Create cache folder at: ",jobCachePath)
-                
-                hipPath=jobPath+"/"+currentProject+"_"+assetType+"_"+assetName+"_"+s+"_master_v000.hip"
-                print("            Create hip file at: ",hipPath)
-                shutil.copyfile(hipSrc, hipPath)
-                    
-                purerefPath=jobPath+"/"+currentProject+"_"+assetType+"_"+assetName+"_"+s+"_master_v000.pur"
-                print("            Create pureRef file at: ",purerefPath)
-                shutil.copyfile(purerefSrc, purerefPath)
-                
-                #Create pub path
-                pubPath=stepPath+"/pub"
-                os.mkdir(pubPath)
-                print("        Create pub folder at: ",pubPath)
-                
-                pubUSDPath=pubPath+"/usd"
-                os.mkdir(pubUSDPath)
-                print("            Create pub usd folder at: ",pubUSDPath)
-                    
-                pubABCPath=pubPath+"/abc"
-                os.mkdir(pubABCPath)
-                print("            Create pub abc folder at: ",pubABCPath)
-                
-                #Create preview folder
-                previewPath=stepPath+"/preview"
-                os.mkdir(previewPath)
-                print("        Create preview folder at: ",previewPath)
-                    
-                videoPath=previewPath+"/"+currentProject+"_"+assetType+"_"+assetName+"_"+s+"_master_preview_v000.mp4"
-                print("            Create video file at: ",videoPath)
-                shutil.copyfile(videoSrc, videoPath)
-                    
-                imagePath=previewPath+"/"+currentProject+"_"+assetType+"_"+assetName+"_"+s+"_master_preview_v000.png"
-                print("            Create image file at: ",imagePath)
-                shutil.copyfile(imageSrc, imagePath)
-                
-            message = f"Asset {assetName} created succesfully."
-            print(message+"\n")
-            messageWindow(root,"Asset Created",message,"info")
+        
     else:
         message = "Error: The asset name "+assetName+" is not a valid name.\nIt must have 2 or more letters and not contain digits."
         print(message+"\n")
         messageWindow(root,"Asset Creation Failed",message,"error")
     print("******************************\n")
-
-#Button Create Asset
-buttonCreateAsset=tk.CTkButton(frameAssets, text="Create",command=createAsset)
-buttonCreateAsset.grid(row=3,column=1,sticky="e")
+    
+##END FUNCTIONS##
 
 ###############################################
 #### END ASSETS TAB ####
@@ -531,25 +503,26 @@ scrollFrame.pack(fill="both",expand=1)
 appsFrame = tk.CTkFrame(scrollFrame)
 appsFrame.pack()
 
+#Apply environment variables in ".env" file
 def addEnvVars():
     currentProject=optionmenu_Projects3.get()
+    
+    #Set current project env variables
+    os.environ['PROJECT'] = projectsPath+"/"+currentProject
     
     #Set env variables from .env file
     for var, value in envVars.items():
         # Optionally expand any environment variable references within the values
         expanded_var = os.path.expandvars(value)
+        
+        if os.path.exists(expanded_var):
+            expanded_var = os.path.abspath(expanded_var)
+            
+        expanded_var = os.path.normpath(expanded_var).replace("\\", "/")
         os.environ[var] = expanded_var
+        print(expanded_var)
     
-    #Set env variable of current project
-    os.environ['PROJECT'] = projectsPath+"/"+currentProject
     
-    #Set env variables from pipeSpecs.json file
-    houdiniVars = data['houdiniVars']
-    for var, value in houdiniVars.items():
-        value = os.path.expandvars(value)
-        if os.path.exists(value):
-            value = os.path.abspath(value)
-        os.environ[var] = value
 
 #Execute apps function
 def executeApp(app):

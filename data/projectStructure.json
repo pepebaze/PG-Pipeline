@@ -1,0 +1,266 @@
+{    
+    "project": {
+        "assets": {
+            "assetType": {
+                "assetName": {
+                    "mod": {
+                        "job": {
+                            "cache": {},
+                            "houdini": "file",
+                            "pureref": "file"
+                        },
+                        "pub": {
+                            "abc": {
+                                "master": {}
+                            },
+                            "usd": {
+                                "master": {}
+                            }
+                        },
+                        "preview": {
+                            "video": "file",
+                            "image": "file"
+                        }
+                    },
+                    "rig": {
+                        "job": {
+                            "cache": {},
+                            "houdini": "file",
+                            "pureref": "file"
+                        },
+                        "pub": {
+                            "abc": {
+                                "master": {}
+                            },
+                            "usd": {
+                                "master": {}
+                            }
+                        },
+                        "preview": {
+                            "video": "file",
+                            "image": "file"
+                        }
+                    },
+                    "lookdev": {
+                        "job": {
+                            "cache": {},
+                            "houdini": "file",
+                            "pureref": "file"
+                        },
+                        "textures": {},
+                        "pub": {
+                            "abc": {
+                                "master": {}
+                            },
+                            "usd": {
+                                "master": {}
+                            }
+                        },
+                        "preview": {
+                            "video": "file",
+                            "image": "file"
+                        }
+                    },
+                    "cfx": {
+                        "job": {
+                            "cache": {},
+                            "houdini": "file",
+                            "pureref": "file"
+                        },
+                        "pub": {
+                            "abc": {
+                                "master": {}
+                            },
+                            "usd": {
+                                "master": {}
+                            }
+                        },
+                        "preview": {
+                            "video": "file",
+                            "image": "file"
+                        }
+                    }
+                }
+            }
+        },
+
+
+
+        "shots": {
+            "epXXX": {
+                "seqXXX": {
+                    "shXXX": {
+                        "lay": {
+                            "job": {
+                                "cache": {},
+                                "houdini": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "abc": {
+                                    "master": {}
+                                },
+                                "usd": {
+                                    "master": {}
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        },
+                        "anm": {
+                            "job": {
+                                "cache": {},
+                                "houdini": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "abc": {
+                                    "master": {}
+                                },
+                                "usd": {
+                                    "master": {}
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        },
+                        "vfx": {
+                            "job": {
+                                "cache": {},
+                                "houdini": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "abc": {
+                                    "master": {}
+                                },
+                                "usd": {
+                                    "master": {}
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        },
+                        "cfx": {
+                            "job": {
+                                "cache": {},
+                                "houdini": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "abc": {
+                                    "master": {}
+                                },
+                                "usd": {
+                                    "master": {}
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        },
+                        "set": {
+                            "job": {
+                                "cache": {},
+                                "houdini": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "abc": {
+                                    "master": {}
+                                },
+                                "usd": {
+                                    "master": {}
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        },
+                        "lgt": {
+                            "job": {
+                                "cache": {},
+                                "houdini": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "abc": {
+                                    "master": {}
+                                },
+                                "usd": {
+                                    "master": {}
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        },
+                        "cmp": {
+                            "job": {
+                                "cache": {},
+                                "nuke": "file",
+                                "pureref": "file"
+                            },
+                            "pub": {
+                                "v000": {
+                                    "exr": {},
+                                    "video": "file"
+                                }
+                            },
+                            "preview": {
+                                "video": "file",
+                                "image": "file"
+                            }                        
+                        }
+                    }   
+                }
+            }
+
+        },
+
+        "edit": {
+            "job": {
+                "davinci": "file"
+            },
+            "pub": {
+                "v000": {
+                    "video": "file"
+                }
+            }
+        },
+
+        "input": {},
+
+        "library": {
+            "otls": {},
+            "hdri":{}
+        },
+
+        "render": {
+        },
+
+        "delivery": {
+            "video": "file"
+        }
+    },
+
+    "assetTypes": ["char","env","prop","vfx"],
+
+    "initFiles": {
+        "houdini": "data/initFiles/houdini_init.hiplc",
+        "nuke": "data/initFiles/nuke_init.nk",
+        "image": "data/initFiles/image_init.png",
+        "pureref": "data/initFiles/pureref_init.pur",
+        "video": "data/initFiles/video_init.mp4",
+        "davinci": "data/initFiles/video_init.drp"
+    }
+}
